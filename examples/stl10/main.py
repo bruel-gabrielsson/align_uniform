@@ -50,7 +50,7 @@ def parse_option():
 
     opt.save_folder = os.path.join(
         opt.result_folder,
-        f"align{opt.align_w:g}alpha{opt.align_alpha:g}_unif{opt.unif_w:g}t{opt.unif_t:g}_type_{opt.unif_loss_type:g}"
+        f"align{opt.align_w:g}alpha{opt.align_alpha:g}_unif{opt.unif_w:g}t{opt.unif_t:g}_type_{opt.unif_loss_type}"
     )
     os.makedirs(opt.save_folder, exist_ok=True)
 
@@ -101,7 +101,7 @@ def main():
         print("[!] Using topology loss")
         topology_layer = AlphaLayer(maxdim=0)
         def topology_loss(x, t=1):
-            dgms, issublevelset = layer(x)
+            dgms, issublevelset = topology_layer(x)
             zero_dgm = dgms[0][1:] # skip infite
             lifetimes = zero_dgm[:,1] - zero_dgm[:,0]
             loss = torch.mean(lifetimes)
