@@ -50,7 +50,7 @@ def parse_option():
 
     opt.save_folder = os.path.join(
         opt.result_folder,
-        f"align{opt.align_w:g}alpha{opt.align_alpha:g}_unif{opt.unif_w:g}t{opt.unif_t:g}"
+        f"align{opt.align_w:g}alpha{opt.align_alpha:g}_unif{opt.unif_w:g}t{opt.unif_t:g}_type_{opt.unif_loss_type:g}"
     )
     os.makedirs(opt.save_folder, exist_ok=True)
 
