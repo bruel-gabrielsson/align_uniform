@@ -10,6 +10,7 @@ from util import AverageMeter, TwoAugUnsupervisedDataset
 from encoder import SmallAlexNet
 from align_uniform import align_loss, uniform_loss
 
+from topologylayer.nn import AlphaLayer
 
 def parse_option():
     parser = argparse.ArgumentParser('STL-10 Representation Learning with Alignment and Uniformity Losses')
@@ -37,6 +38,8 @@ def parse_option():
 
     parser.add_argument('--data_folder', type=str, default='./data', help='Path to data')
     parser.add_argument('--result_folder', type=str, default='./results', help='Base directory to save model')
+
+    parser.add_argument('--unif_loss_type', type=str, default='gaussian_kernel', help='Path to data')
 
     opt = parser.parse_args()
 
@@ -72,16 +75,20 @@ def get_data_loader(opt):
                                        shuffle=True, pin_memory=True)
 
 
+
 def main():
     opt = parse_option()
 
     print(f'Optimize: {opt.align_w:g} * loss_align(alpha={opt.align_alpha:g}) + {opt.unif_w:g} * loss_uniform(t={opt.unif_t:g})')
 
-    torch.cuda.set_device(opt.gpus[0])
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
-
-    encoder = nn.DataParallel(SmallAlexNet(feat_dim=opt.feat_dim).to(opt.gpus[0]), opt.gpus)
+    if torch.cuda.is_available():
+        torch.cuda.set_device(opt.gpus[0])
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = True
+        encoder = nn.DataParallel(SmallAlexNet(feat_dim=opt.feat_dim).to(opt.gpus[0]), opt.gpus)
+    else:
+        print("[!] Warning: not using GPUs")
+        encoder = SmallAlexNet(feat_dim=opt.feat_dim)
 
     optim = torch.optim.SGD(encoder.parameters(), lr=opt.lr,
                             momentum=opt.momentum, weight_decay=opt.weight_decay)
@@ -90,10 +97,23 @@ def main():
 
     loader = get_data_loader(opt)
 
+    if opt.unif_loss_type == "topology":
+        print("[!] Using topology loss")
+        topology_layer = AlphaLayer(maxdim=0)
+        def topology_loss(x, t=1):
+            dgms, issublevelset = layer(x)
+            zero_dgm = dgms[0][1:] # skip infite
+            lifetimes = zero_dgm[:,1] - zero_dgm[:,0]
+            loss = torch.mean(lifetimes)
+            return loss
+
+        uniform_loss = topology_loss
+
     align_meter = AverageMeter('align_loss')
     unif_meter = AverageMeter('uniform_loss')
     loss_meter = AverageMeter('total_loss')
     it_time_meter = AverageMeter('iter_time')
+
     for epoch in range(opt.epochs):
         align_meter.reset()
         unif_meter.reset()

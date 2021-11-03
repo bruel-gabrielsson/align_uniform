@@ -9,4 +9,5 @@ def uniform_loss(x, t=2):
     return torch.pdist(x, p=2).pow(2).mul(-t).exp().mean().log()
 
 
+
 __all__ = ['align_loss', 'uniform_loss']
