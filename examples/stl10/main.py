@@ -8,9 +8,9 @@ import torch.nn as nn
 
 from util import AverageMeter, TwoAugUnsupervisedDataset
 from encoder import SmallAlexNet
-from align_uniform import align_loss, uniform_loss
+from align_uniform import align_loss, uniform_loss, min_loss
 
-from topologylayer.nn import AlphaLayer as TopLayer 
+from topologylayer.nn import AlphaLayer as TopLayer
 
 def parse_option():
     parser = argparse.ArgumentParser('STL-10 Representation Learning with Alignment and Uniformity Losses')
@@ -109,6 +109,8 @@ def main():
             return loss
 
         uniform_loss = topology_loss
+    elif opt.unif_loss_type == "min_loss":
+        uniform_loss = min_loss
 
     align_meter = AverageMeter('align_loss')
     unif_meter = AverageMeter('uniform_loss')
