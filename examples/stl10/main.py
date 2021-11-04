@@ -10,7 +10,7 @@ from util import AverageMeter, TwoAugUnsupervisedDataset
 from encoder import SmallAlexNet
 from align_uniform import align_loss, uniform_loss
 
-from topologylayer.nn import AlphaLayer
+from topologylayer.nn import AlphaLayer as TopLayer 
 
 def parse_option():
     parser = argparse.ArgumentParser('STL-10 Representation Learning with Alignment and Uniformity Losses')
@@ -99,8 +99,9 @@ def main():
 
     if opt.unif_loss_type == "topology":
         print("[!] Using topology loss")
-        topology_layer = AlphaLayer(maxdim=0)
+        topology_layer = TopLayer(maxdim=0) # , alg='hom2')
         def topology_loss(x, t=1):
+            #print(x.shape) # torch.Size([768, 128])
             dgms, issublevelset = topology_layer(x)
             zero_dgm = dgms[0][1:] # skip infite
             lifetimes = zero_dgm[:,1] - zero_dgm[:,0]
