@@ -110,6 +110,7 @@ def main():
 
         uniform_loss = topology_loss
     elif opt.unif_loss_type == "min_loss":
+        print("[!] using min_loss")
         uniform_loss = min_loss
 
     align_meter = AverageMeter('align_loss')
