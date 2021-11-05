@@ -9,6 +9,6 @@ def uniform_loss(x, t=2):
     return torch.pdist(x, p=2).pow(2).mul(-t).exp().mean().log()
 
 def min_loss(x, t=1):
-    return -torch.pdist(y, p=2).min(dim=-1).values.mean()
+    return -torch.pdist(x, p=2).min(dim=-1).values.mean()
 
 __all__ = ['align_loss', 'uniform_loss', 'min_loss']

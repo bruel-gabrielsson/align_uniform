@@ -96,7 +96,6 @@ def main():
                                                      milestones=opt.lr_decay_epochs)
 
     loader = get_data_loader(opt)
-
     if opt.unif_loss_type == "topology":
         print("[!] Using topology loss")
         topology_layer = TopLayer(maxdim=0) # , alg='hom2')
@@ -108,10 +107,13 @@ def main():
             loss = torch.mean(lifetimes)
             return loss
 
-        uniform_loss = topology_loss
+        uni_loss = topology_loss
     elif opt.unif_loss_type == "min_loss":
         print("[!] using min_loss")
-        uniform_loss = min_loss
+        uni_loss = min_loss
+    else:
+        uni_loss = uniform_loss
+        print('[!] Using default loss')
 
     align_meter = AverageMeter('align_loss')
     unif_meter = AverageMeter('uniform_loss')
@@ -128,7 +130,7 @@ def main():
             optim.zero_grad()
             x, y = encoder(torch.cat([im_x.to(opt.gpus[0]), im_y.to(opt.gpus[0])])).chunk(2)
             align_loss_val = align_loss(x, y, alpha=opt.align_alpha)
-            unif_loss_val = (uniform_loss(x, t=opt.unif_t) + uniform_loss(y, t=opt.unif_t)) / 2
+            unif_loss_val = (uni_loss(x, t=opt.unif_t) + uni_loss(y, t=opt.unif_t)) / 2
             loss = align_loss_val * opt.align_w + unif_loss_val * opt.unif_w
             align_meter.update(align_loss_val, x.shape[0])
             unif_meter.update(unif_loss_val)
