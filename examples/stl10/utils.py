@@ -1,4 +1,5 @@
 import sys # Library for INT_MAX
+import torch
 
 class Graph():
 
@@ -90,7 +91,7 @@ class Graph():
 
 def get_mst_indices(pd):
     with torch.no_grad():
-        pd = pd.detach().numpy()
+        pd = pd.detach().cpu().numpy()
         #print(pd)
         g = Graph(len(pd))
         g.graph = pd

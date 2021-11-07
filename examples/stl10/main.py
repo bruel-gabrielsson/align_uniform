@@ -113,7 +113,7 @@ def main():
         # MST inds
         def mst_loss(y, t=1):
             pdist = torch.cdist(y, y, p=2)
-            pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist)))
+            pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist))).to(y.device)
             rows, cols = get_mst_indices(pdist)
             loss = -torch.mean(pdist[rows, cols])
             return loss
