@@ -10,7 +10,8 @@ from util import AverageMeter, TwoAugUnsupervisedDataset
 from encoder import SmallAlexNet
 from align_uniform import align_loss, uniform_loss, min_loss
 
-from topologylayer.nn import AlphaLayer as TopLayer
+#from topologylayer.nn import AlphaLayer as TopLayer
+from utils import get_mst_indices
 
 def parse_option():
     parser = argparse.ArgumentParser('STL-10 Representation Learning with Alignment and Uniformity Losses')
@@ -108,6 +109,16 @@ def main():
             return loss
 
         uni_loss = topology_loss
+    elif opt.unif_loss_type == "MST_loss":
+        # MST inds
+        def mst_loss(y, t=1):
+            pdist = torch.cdist(y, y, p=2)
+            pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist)))
+            rows, cols = get_mst_indices(pdist)
+            loss = -torch.mean(pdist[rows, cols])
+            return loss
+        uni_loss = mst_loss
+        
     elif opt.unif_loss_type == "min_loss":
         print("[!] using min_loss")
         uni_loss = min_loss
