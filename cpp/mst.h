@@ -23,7 +23,7 @@ class Graph{
       void AddEdge(Edge e);
       int FindParent(int node);
       //void KruskalMST(std :: vector<Edge>&);
-      void KruskalMST (std :: tuple< std :: vector<int>, std :: vector<int> >&);
+      void KruskalMST (std :: pair< std :: vector<int>, std :: vector<int> >&);
       void DisplayEdges(std :: vector<Edge>&);
 };
 
@@ -35,4 +35,4 @@ class Graph{
 //
 // void Graph :: KruskalMST (std :: tuple< std :: vector<int>, std :: vector<int> >& result);
 
-std::tuple< std :: vector<int>, std :: vector<int> > MST(std::vector<std::vector<float>> distances);
+std::pair< std :: vector<int>, std :: vector<int> > MST(std::vector<std::vector<float>> distances);

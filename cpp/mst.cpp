@@ -114,7 +114,7 @@ void Graph :: KruskalMST (std :: tuple< std :: vector<int>, std :: vector<int> >
     }
 }
 
-std::tuple< std :: vector<int>, std :: vector<int> > MST(std::vector<std::vector<float>> distances) {
+std::pair< std :: vector<int>, std :: vector<int> > MST(std::vector<std::vector<float>> distances) {
     int num_nodes = (int) distances.size();
     //std :: cout << "\nnum_nodes : " << num_nodes << std :: endl;
     Graph g1(num_nodes);
@@ -127,7 +127,7 @@ std::tuple< std :: vector<int>, std :: vector<int> > MST(std::vector<std::vector
             }
         }
     }
-    std :: tuple< std :: vector<int>, std :: vector<int> > mst; // mst will contain the minimum spanning tree
+    std :: pair< std :: vector<int>, std :: vector<int> > mst; // mst will contain the minimum spanning tree
     g1.KruskalMST(mst);
     return mst;
 }
@@ -137,7 +137,7 @@ std::tuple< std :: vector<int>, std :: vector<int> > MST(std::vector<std::vector
 int main() {
 
     std::vector<std::vector<float>> distances = {{0.234, 1.2334, 0.233},{0.234, 1.2334, 0.233},{0.234, 1.2334, 0.233}};
-    std :: tuple< std :: vector<int>, std :: vector<int> > rows_cols = MST(distances);
+    std :: pair< std :: vector<int>, std :: vector<int> > rows_cols = MST(distances);
 
 
 
