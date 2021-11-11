@@ -85,7 +85,7 @@ int Graph :: FindParent (int node) {
 
 //Funtion implements Kruskal's algorithm and finds the minimum spanning tree.
 //void Graph :: KruskalMST (std :: vector<Edge>& result) {
-void Graph :: KruskalMST (std :: tuple< std :: vector<int>, std :: vector<int> >& result) {
+void Graph :: KruskalMST (std :: pair< std :: vector<int>, std :: vector<int> >& result) {
 
     for (int i=0; i<num_nodes; i++) {
         parent[i] = i;
