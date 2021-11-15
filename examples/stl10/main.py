@@ -118,7 +118,7 @@ def main():
 
         uni_loss = mst_loss
 
-    if opt.unif_loss_type == "topology":
+    elif opt.unif_loss_type == "topology":
         print("[!] Using topology loss")
         topology_layer = TopLayer(maxdim=0) # , alg='hom2')
         def topology_loss(x, t=1):
@@ -131,6 +131,7 @@ def main():
 
         uni_loss = topology_loss
     elif opt.unif_loss_type == "MST_loss":
+        print("[!] MST_loss")
         import mstcpp
         def cpp_mst(pd):
             with torch.no_grad():
