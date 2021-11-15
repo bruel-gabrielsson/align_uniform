@@ -97,6 +97,27 @@ def main():
                                                      milestones=opt.lr_decay_epochs)
 
     loader = get_data_loader(opt)
+    if opt.unif_loss_type == "MST_kernel":
+        #torch.pdist(x, p=2).pow(2).mul(-t).exp().mean().log()
+        print('[!] MST_kernel')
+        import mstcpp
+        def cpp_mst(pd):
+            with torch.no_grad():
+                pd = pd.detach().cpu().numpy()
+                rows, cols = mstcpp.MST(pd)
+                return torch.tensor(rows), torch.tensor(cols)
+
+        # MST inds
+        def mst_loss(y, t=2.0):
+            #pdist = torch.cdist(y, y, p=t)
+            pdist = torch.pdist(x, p=2).pow(2).mul(-t).exp() # .mean().log()
+            #pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist))).to(y.device)
+            rows, cols = cpp_mst(pdist) # get_mst_indices(pdist)
+            loss = torch.mean(pdist[rows.to(y.device), cols.to(y.device)]).log()
+            return loss
+
+        uni_loss = mst_loss
+
     if opt.unif_loss_type == "topology":
         print("[!] Using topology loss")
         topology_layer = TopLayer(maxdim=0) # , alg='hom2')
