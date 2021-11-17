@@ -181,8 +181,14 @@ def main():
             if ii % opt.log_interval == 0:
                 print(f"Epoch {epoch}/{opt.epochs}\tIt {ii}/{len(loader)}\t" +
                       f"{align_meter}\t{unif_meter}\t{loss_meter}\t{it_time_meter}")
+
             t0 = time.time()
         scheduler.step()
+
+        if epoch % 10 == 0:
+            ckpt_file = os.path.join(opt.save_folder, 'encoder_{}.pth'.format(epoch))
+            torch.save(encoder.module.state_dict(), ckpt_file)
+
     ckpt_file = os.path.join(opt.save_folder, 'encoder.pth')
     torch.save(encoder.module.state_dict(), ckpt_file)
     print(f'Saved to {ckpt_file}')
