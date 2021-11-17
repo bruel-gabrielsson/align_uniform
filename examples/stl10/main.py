@@ -110,10 +110,10 @@ def main():
         # MST inds
         def mst_loss(y, t=2.0):
             #pdist = torch.cdist(y, y, p=t)
-            pdist = torch.cdist(y, y, p=2).pow(2).mul(-t).exp() # .mean().log()
+            pdist = -torch.cdist(y, y, p=2).pow(2).mul(-t).exp() # .mean().log()
             #pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist))).to(y.device)
             rows, cols = cpp_mst(pdist) # get_mst_indices(pdist)
-            loss = torch.mean(pdist[rows.to(y.device), cols.to(y.device)]).log()
+            loss = torch.mean(-pdist[rows.to(y.device), cols.to(y.device)]).log()
             return loss
 
         uni_loss = mst_loss
