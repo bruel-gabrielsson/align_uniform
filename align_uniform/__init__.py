@@ -16,6 +16,6 @@ def min_loss(x, t=2):
     # return -torch.pdist(y, p=2).min(dim=-1).values.mean()
 
 def pairwise_loss(x, t=2):
-    return -torch.pdist(x, p=t)
+    return -torch.pdist(x, p=t).mean()
 
 __all__ = ['align_loss', 'uniform_loss', 'min_loss', 'pairwise_loss']
