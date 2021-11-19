@@ -15,11 +15,11 @@ def min_loss(x, t=2):
     return loss
     # return -torch.pdist(y, p=2).min(dim=-1).values.mean()
 
-def sort_2_loss(x, t=2):
-    pdist = torch.cdist(x, x, p=t)
+def sort_2_loss(x, t=1):
+    pdist = torch.cdist(x, x, p=2)
     pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
     sorted, indices = torch.sort(pdist, dim=-1) #
-    loss = -sorted[:,1].mean() # take not the first but the seoncd
+    loss = -sorted[:,t].mean() # take not the first but the seoncd
     return loss
 
 def pairwise_loss(x, t=2):

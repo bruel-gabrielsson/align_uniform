@@ -42,6 +42,8 @@ def parse_option():
 
     parser.add_argument('--unif_loss_type', type=str, default='gaussian_kernel', help='Path to data')
 
+    #parser.add_argument('--nth_min', type=int, default=0, help='Which nth closest one to repel')
+
     opt = parser.parse_args()
 
     if opt.lr is None:
