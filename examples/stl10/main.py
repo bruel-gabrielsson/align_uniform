@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from util import AverageMeter, TwoAugUnsupervisedDataset
 from encoder import SmallAlexNet
-from align_uniform import align_loss, uniform_loss, min_loss, pairwise_loss
+from align_uniform import align_loss, uniform_loss, min_loss, pairwise_loss, sort_2_loss
 
 #from topologylayer.nn import AlphaLayer as TopLayer
 from utils import get_mst_indices
