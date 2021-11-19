@@ -154,6 +154,9 @@ def main():
     elif opt.unif_loss_type == "pairwise_loss":
         print("[!] pairwise_loss")
         uni_loss = pairwise_loss
+    elif opt.unif_loss_type == "sort_2_loss":
+        print("[!] sort_2_loss")
+        uni_loss = sort_2_loss
     else:
         uni_loss = uniform_loss
         print('[!] Using default loss')
