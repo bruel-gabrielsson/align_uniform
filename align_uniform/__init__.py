@@ -19,7 +19,7 @@ def sort_2_loss(x, t=1):
     pdist = torch.cdist(x, x, p=2)
     pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
     sorted, indices = torch.sort(pdist, dim=-1) #
-    loss = -sorted[:,t].mean() # take not the first but the seoncd
+    loss = -sorted[:,int(t)].mean() # take not the first but the seoncd
     return loss
 
 def pairwise_loss(x, t=2):
