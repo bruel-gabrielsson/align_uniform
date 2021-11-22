@@ -176,8 +176,9 @@ def main():
             return loss
         uni_loss = mst_loss
     elif opt.unif_loss_type == "custom_weights_loss":
-        weights = torch.tensor([0.1,0.5,1.0,0.5,0.1], device=encoder.device)
+        weights = torch.tensor([0.1,0.5,1.0,0.5,0.1]) # , device=encoder.device)
         def sort_weigh_loss(x, t=1):
+            weights = weights.to(x.device)
             pdist = torch.cdist(x, x, p=2)
             pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
             sorted, indices = torch.sort(pdist, dim=-1) #
