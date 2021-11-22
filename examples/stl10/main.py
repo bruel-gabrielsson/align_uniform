@@ -159,6 +159,23 @@ def main():
     elif opt.unif_loss_type == "sort_2_loss":
         print("[!] sort_2_loss")
         uni_loss = sort_2_loss
+    elif opt.unif_loss_type == "dot_product_loss":
+        print("[!] dot_product_loss")
+        import mstcpp
+        def cpp_mst(pd):
+            with torch.no_grad():
+                pd = pd.detach().cpu().numpy()
+                rows, cols = mstcpp.MST(pd)
+                return torch.tensor(rows), torch.tensor(cols)
+                
+        # MST inds
+        def mst_loss(y, t=2.0):
+            pdist = -torch.mm(y, y.transpose(0,1))
+            rows, cols = cpp_mst(pdist) # get_mst_indices(pdist)
+            loss = -torch.mean(pdist[rows.to(y.device), cols.to(y.device)])
+            return loss
+        uni_loss = mst_loss
+
     else:
         uni_loss = uniform_loss
         print('[!] Using default loss')
