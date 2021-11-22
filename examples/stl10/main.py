@@ -167,7 +167,7 @@ def main():
                 pd = pd.detach().cpu().numpy()
                 rows, cols = mstcpp.MST(pd)
                 return torch.tensor(rows), torch.tensor(cols)
-                
+
         # MST inds
         def mst_loss(y, t=2.0):
             pdist = -torch.mm(y, y.transpose(0,1))
@@ -175,6 +175,16 @@ def main():
             loss = -torch.mean(pdist[rows.to(y.device), cols.to(y.device)])
             return loss
         uni_loss = mst_loss
+    elif opt.unif_loss_type == "custom_weights_loss":
+        weights = torch.tensor([0.1,0.5,1.0,0.5,0.1], device=encoder.device)
+        def sort_weigh_loss(x, t=1):
+            pdist = torch.cdist(x, x, p=2)
+            pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
+            sorted, indices = torch.sort(pdist, dim=-1) #
+            weighted = sorted[:,:len(weights)] * weights # .mean() # take not the first but the seoncd
+            return -torch.mean(weighted)
+        uni_loss = sort_weigh_loss
+        print('[!] custom_weights_loss')
 
     else:
         uni_loss = uniform_loss
