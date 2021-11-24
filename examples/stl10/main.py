@@ -243,7 +243,7 @@ def main():
             #print(pdist)
             min_global_distance = torch.min(pdist)
 
-            pos_loss = torch.mean(pair_dists[pair_dists >= min_global_distance*5])
+            pos_loss = torch.mean(pair_dists[pair_dists >= min_global_distance/5])
             neg_loss = -torch.mean(pdist[pdist <= max_pair_dist*5])
             #loss = pos_loss + neg_loss
             return pos_loss, neg_loss
