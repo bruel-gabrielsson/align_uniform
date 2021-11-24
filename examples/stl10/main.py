@@ -191,7 +191,7 @@ def main():
 
     elif opt.unif_loss_type == "global_loss":
         global_loss = True
-
+        print("[!] global_loss")
         def loss_fn(x,y,alpha=2.0, t=2.0):
             num_pairs = len(x)
             pair_dists = torch.linalg.norm(x-y, dim=-1)
@@ -212,9 +212,39 @@ def main():
             pdist[mask2, mask1] += 1e10
             #print(pdist)
             min_global_distance = torch.min(pdist)
-            
+
             pos_loss = torch.mean(pair_dists[pair_dists >= min_global_distance])
             neg_loss = -torch.mean(pdist[pdist <= max_pair_dist])
+            #loss = pos_loss + neg_loss
+            return pos_loss, neg_loss
+            #assert(False)
+
+    elif opt.unif_loss_type == "global_loss2":
+        global_loss = True
+        print("[!] global_loss2")
+        def loss_fn(x,y,alpha=2.0, t=2.0):
+            num_pairs = len(x)
+            pair_dists = torch.linalg.norm(x-y, dim=-1)
+            max_pair_dist = torch.max(pair_dists)
+            #print(pair_dists.shape)
+            combined = torch.cat((x,y), dim=0)
+            pdist = torch.cdist(combined, combined, p=2) # (num_pairs+num_pairs) x (num_pairs+num_pairs)
+            pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
+            #print(pdist.shape)
+            # torch.Size([768])
+            # torch.Size([1536, 1536])
+            # pdist[pair_mask] += 1e10
+            # distance between all non pairs (max should be bigger than min, but if it is we do nothing)
+            # else we push away all non pairs closer than max
+            # and push together all pairs further away than min
+            mask1, mask2 = torch.arange(num_pairs, device=x.device), torch.arange(num_pairs, device=x.device) + num_pairs
+            pdist[mask1, mask2] += 1e10
+            pdist[mask2, mask1] += 1e10
+            #print(pdist)
+            min_global_distance = torch.min(pdist)
+
+            pos_loss = torch.mean(pair_dists[pair_dists >= min_global_distance*5])
+            neg_loss = -torch.mean(pdist[pdist <= max_pair_dist*5])
             #loss = pos_loss + neg_loss
             return pos_loss, neg_loss
             #assert(False)
