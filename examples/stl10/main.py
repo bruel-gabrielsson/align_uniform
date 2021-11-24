@@ -190,27 +190,34 @@ def main():
         print('[!] custom_weights_loss')
 
     elif opt.unif_loss_type == "global_loss":
+        global_loss = True
 
         def loss_fn(x,y,alpha=2.0, t=2.0):
             num_pairs = len(x)
             pair_dists = torch.linalg.norm(x-y, dim=-1)
             max_pair_dist = torch.max(pair_dists)
-            print(pair_dists.shape)
+            #print(pair_dists.shape)
             combined = torch.cat((x,y), dim=0)
             pdist = torch.cdist(combined, combined, p=2) # (num_pairs+num_pairs) x (num_pairs+num_pairs)
             pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
-            print(pdist.shape)
+            #print(pdist.shape)
+            # torch.Size([768])
+            # torch.Size([1536, 1536])
             # pdist[pair_mask] += 1e10
-            min_global_distance = torch.min(pdist)
             # distance between all non pairs (max should be bigger than min, but if it is we do nothing)
             # else we push away all non pairs closer than max
             # and push together all pairs further away than min
             mask1, mask2 = torch.arange(num_pairs, device=x.device), torch.arange(num_pairs, device=x.device) + num_pairs
-            min_global_distance[mask1, mask2] += 1e10
-            min_global_distance[mask2, mask1] += 1e10
-
-            print(min_global_distance)
-            assert(False)
+            pdist[mask1, mask2] += 1e10
+            pdist[mask2, mask1] += 1e10
+            #print(pdist)
+            min_global_distance = torch.min(pdist)
+            
+            pos_loss = torch.mean(pair_dists[pair_dists >= min_global_distance])
+            neg_loss = -torch.mean(pdist[pdist <= max_pair_dist])
+            #loss = pos_loss + neg_loss
+            return pos_loss, neg_loss
+            #assert(False)
 
     else:
         uni_loss = uniform_loss
@@ -231,13 +238,13 @@ def main():
             optim.zero_grad()
             x, y = encoder(torch.cat([im_x.to(opt.gpus[0]), im_y.to(opt.gpus[0])])).chunk(2)
             if global_loss:
-                loss = loss_fn(x,y,alpha=opt.align_alpha, t=opt.unif_t)
+                align_loss_val, unif_loss_val = loss_fn(x,y,alpha=opt.align_alpha, t=opt.unif_t)
             else:
                 align_loss_val = align_loss(x, y, alpha=opt.align_alpha)
                 unif_loss_val = (uni_loss(x, t=opt.unif_t) + uni_loss(y, t=opt.unif_t)) / 2
-                loss = align_loss_val * opt.align_w + unif_loss_val * opt.unif_w
-                align_meter.update(align_loss_val, x.shape[0])
-                unif_meter.update(unif_loss_val)
+            loss = align_loss_val * opt.align_w + unif_loss_val * opt.unif_w
+            align_meter.update(align_loss_val, x.shape[0])
+            unif_meter.update(unif_loss_val)
             loss_meter.update(loss, x.shape[0])
             loss.backward()
             optim.step()
