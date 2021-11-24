@@ -99,6 +99,8 @@ def main():
                                                      milestones=opt.lr_decay_epochs)
 
     loader = get_data_loader(opt)
+
+    global_loss = False # wether to send pos and neg to loss or separate them
     if opt.unif_loss_type == "MST_kernel":
         #torch.pdist(x, p=2).pow(2).mul(-t).exp().mean().log()
         print('[!] MST_kernel')
@@ -178,7 +180,7 @@ def main():
     elif opt.unif_loss_type == "custom_weights_loss":
         #weights = torch.tensor([0.1,0.5,1.0,0.5,0.1]) # , device=encoder.device)
         def sort_weigh_loss(x, t=1):
-            weights = torch.tensor([0.1,0.5,1.0,0.5,0.1], device=x.device) # weights.to(x.device)
+            weights = torch.tensor([0.0,1.0,0.9], device=x.device) # weights.to(x.device)
             pdist = torch.cdist(x, x, p=2)
             pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
             sorted, indices = torch.sort(pdist, dim=-1) #
@@ -186,6 +188,29 @@ def main():
             return -torch.mean(weighted)
         uni_loss = sort_weigh_loss
         print('[!] custom_weights_loss')
+
+    elif opt.unif_loss_type == "global_loss":
+
+        def loss_fn(x,y,alpha=2.0, t=2.0):
+            num_pairs = len(x)
+            pair_dists = torch.linalg.norm(x-y, dim=-1)
+            max_pair_dist = torch.max(pair_dists)
+            print(pair_dists.shape)
+            combined = torch.cat((x,y), dim=0)
+            pdist = torch.cdist(combined, combined, p=2) # (num_pairs+num_pairs) x (num_pairs+num_pairs)
+            pdist = pdist + torch.diag(torch.tensor([1e10] * len(pdist), device=x.device))
+            print(pdist.shape)
+            # pdist[pair_mask] += 1e10
+            min_global_distance = torch.min(pdist)
+            # distance between all non pairs (max should be bigger than min, but if it is we do nothing)
+            # else we push away all non pairs closer than max
+            # and push together all pairs further away than min
+            mask1, mask2 = torch.arange(num_pairs, device=x.device), torch.arange(num_pairs, device=x.device) + num_pairs
+            min_global_distance[mask1, mask2] += 1e10
+            min_global_distance[mask2, mask1] += 1e10
+
+            print(min_global_distance)
+            assert(False)
 
     else:
         uni_loss = uniform_loss
@@ -205,11 +230,14 @@ def main():
         for ii, (im_x, im_y) in enumerate(loader):
             optim.zero_grad()
             x, y = encoder(torch.cat([im_x.to(opt.gpus[0]), im_y.to(opt.gpus[0])])).chunk(2)
-            align_loss_val = align_loss(x, y, alpha=opt.align_alpha)
-            unif_loss_val = (uni_loss(x, t=opt.unif_t) + uni_loss(y, t=opt.unif_t)) / 2
-            loss = align_loss_val * opt.align_w + unif_loss_val * opt.unif_w
-            align_meter.update(align_loss_val, x.shape[0])
-            unif_meter.update(unif_loss_val)
+            if global_loss:
+                loss = loss_fn(x,y,alpha=opt.align_alpha, t=opt.unif_t)
+            else:
+                align_loss_val = align_loss(x, y, alpha=opt.align_alpha)
+                unif_loss_val = (uni_loss(x, t=opt.unif_t) + uni_loss(y, t=opt.unif_t)) / 2
+                loss = align_loss_val * opt.align_w + unif_loss_val * opt.unif_w
+                align_meter.update(align_loss_val, x.shape[0])
+                unif_meter.update(unif_loss_val)
             loss_meter.update(loss, x.shape[0])
             loss.backward()
             optim.step()
